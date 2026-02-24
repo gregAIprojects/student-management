@@ -929,7 +929,34 @@ async function verifyLogin() {
     }
 
     function setView(v) { currentView = v; renderMain(); }
-    function refreshAll() { google.script.run.withSuccessHandler(data => { allTasks = data; filteredTasks = data; updateGlobalMetrics(); renderMain(); }).getTasks(); }
+    
+
+async function refreshAll() {
+  // 1. REPLACE THIS URL with your deployed Apps Script URL from Step 1
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec"; 
+
+  try {
+    const response = await fetch(scriptUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getTasks" })
+    });
+
+    const data = await response.json();
+
+    // This handles the data exactly like your old success handler
+    allTasks = data;
+    filteredTasks = data;
+    
+    // Existing functions from your index.html to update the UI
+    updateGlobalMetrics(); 
+    renderMain();
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    alert("System could not load data. Check your connection or Script URL.");
+  }
+}
+
 
 function updateGlobalMetrics() {
     google.script.run.withSuccessHandler(m => {
