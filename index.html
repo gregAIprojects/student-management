@@ -932,7 +932,7 @@ async function verifyLogin() {
     
 
 async function refreshAll() {
-  // 1. REPLACE THIS URL with your deployed Apps Script URL from Step 1
+  // 🚨 IMPORTANT: Replace the URL below with your actual /exec URL
   const scriptUrl = "https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec"; 
 
   try {
@@ -943,11 +943,9 @@ async function refreshAll() {
 
     const data = await response.json();
 
-    // This handles the data exactly like your old success handler
+    // Standard logic to update your UI [cite: 104, 114]
     allTasks = data;
     filteredTasks = data;
-    
-    // Existing functions from your index.html to update the UI
     updateGlobalMetrics(); 
     renderMain();
 
