@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  
+  <style>
+
+
+
+/* Ensure Finance Modal is at the top of the stack */
+#financeModal { z-index: 5000 !important; }
+
+/* Critical Fix: Elevates the modal content above the shadow */
+#financeModal .modal-content { z-index: 5001 !important; }
+
+/* Prevent the cumulative "dark shadow" by keeping backdrops at one level */
+.modal-backdrop { z-index: 1040 !important; }
+
+/* Level 1: Main Edit Student Modal */
+#taskModal { z-index: 1080 !important; }
+
+/* Level 2: Sub-Modals (They must be higher than 1050) */
+#attendanceHistoryModal { z-index: 3000 !important; }
+#paymentModal { z-index: 3000 !important; }
+
+/* The "Shadow" Fix: Ensures backdrops don't stack and turn the screen black */
+.modal-backdrop:nth-of-type(even) { z-index: 1045 !important; }
+.modal-backdrop:nth-of-type(odd) { z-index: 1075 !important; }
+    
+    :root { 
+      --primary: #6366f1; 
+      --bg: #f8fafc; 
+      --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.04); 
+      --font-main: 'JetBrains Mono', monospace;
+    }
+    
+    body, html { 
+      height: 100%; 
+      margin: 0; 
+      background: var(--bg); 
+      font-family: var(--font-main); 
+      font-size: 13px; 
+      color: #1e293b; 
+      -webkit-font-smoothing: antialiased; 
+    }
+
+    h1, h2, h3, h4, h5, h6, .btn, .form-control, .form-select, .badge, .modal-title { font-family: var(--font-main); }
+
+    .main-header { background: #fff; padding: 10px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; height: 75px; position: sticky; top:0; z-index: 1000; }
+    #live-clock { font-weight: 700; font-size: 1.3rem; color: var(--primary); letter-spacing: -1px; }
+    #live-date { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .app-container { display: flex; height: calc(100vh - 75px); }
+    #left-panel { width: 300px; background: #fff; border-right: 1px solid #e2e8f0; padding: 25px; overflow-y: auto; flex-shrink: 0; }
+    #right-panel { flex-grow: 1; overflow-y: auto; padding: 25px; }
+    
+    .metric-card { border-radius: 14px; padding: 18px; color: white; margin-bottom: 12px; cursor: pointer; border: none; width: 100%; text-align: left; transition: all 0.3s ease; }
+    .bg-total { background: linear-gradient(135deg, #334155, #0f172a); }
+    .bg-rate { background: linear-gradient(135deg, #818cf8, #4f46e5); }
+    .bg-open { background: linear-gradient(135deg, #38bdf8, #0284c7); }
+    .bg-critical { background: linear-gradient(135deg, #fb7185, #e11d48); }
+    
+    .task-card { background: white; border-radius: 12px; border: 1px solid #eef2f6; padding: 15px; margin-bottom: 15px; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--card-shadow); }
+    .task-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .task-title { font-weight: 700; font-size: 0.95rem; color: #0f172a; margin: 5px 0; }
+    .status-pill { border-radius: 6px; padding: 3px 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+    
+    .kanban-board { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; min-height: 400px; }
+    .kanban-col { background: #f1f5f9; border-radius: 15px; padding: 15px; min-width: 300px; max-width: 300px; flex-shrink: 0; }
+    .kanban-col-title { font-weight: 800; font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 15px; display: flex; justify-content: space-between; }
+
+    .section-title { font-size: 16px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 15px; margin-top: 10px; }
+    .history-log { background: #f8fafc !important; font-size: 11px; }
+
+    /* Custom sizing for main header buttons */
+.btn-header-custom {
+  padding: 4px 12px !important;
+  font-size: 12px !important;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+/* Custom Playful Login Background */
+/* Futuristic Playful Background */
+#loginScreen {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated Floating "Cloudberries" */
+#loginScreen::before, #loginScreen::after {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  animation: float 15s infinite alternate ease-in-out;
+}
+
+#loginScreen::before {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  top: -10%;
+  left: -5%;
+}
+
+#loginScreen::after {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  bottom: -10%;
+  right: -5%;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(50px, 100px) scale(1.2); }
+}
+
+/* Glassmorphism Login Card */
+#loginScreen .card {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  z-index: 1;
+}
+
+/* Make text readable on dark background */
+#loginScreen h4, #loginScreen p {
+  color: #ffffff !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+#loginScreen .form-control {
+ background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 12px;
+}
+
+#loginScreen .form-control::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+
+/* Reduce gap between Header and Actions */
+.header-card {
+  margin-bottom: 5px !important; /* Reduces space below the top card */
+  padding-top: 15px !important;
+  padding-bottom: 10px !important;
+}
+
+.action-bar {
+  margin-top: 0px !important; /* Removes extra space above buttons */
+  padding-top: 5px !important;
+}
+
+/* Optional: Shrink the Rocket/Logo size if it's pushing the box down */
+.header-logo {
+  height: 40px !important;
+  width: auto;
+}
+
+
+
+/* Custom Purple Gradient Header */
+.main-header-gradient {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  color: white !important;
+  border: none;
+  border-radius: 15px;
+  padding: 15px 20px;
+  margin-bottom: 10px;
+}
+
+/* Full Width Squared Header */
+.main-header-wrapper {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  z-index: 1000;
+}
+
+.main-header-gradient {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  color: white !important;
+  padding: 15px 0;
+  width: 100%;
+  /* Removed border-radius for sharp squared corners */
+  border-radius: 0 !important; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  border-bottom: 2px solid rgba(255,255,255,0.1); /* Adds a subtle divider line */
+}
+
+/* Ensure the logo container is also squared if you want a fully sharp look */
+.logo-box-squared {
+  width: 55px; 
+  height: 55px; 
+  min-width: 55px;
+  background: white;
+  padding: 4px;
+  border-radius: 4px; /* Very slight rounding for professional look, or 0 for total sharp */
+}
+.main-header-gradient .text-muted {
+  color: rgba(255, 255, 255, 0.8) !important; /* Makes sub-text white-transparent */
+}
+
+
+/* High-Visibility JetBrains Mono Clock */
+#headerClock {
+  text-align: right;
+  line-height: 1.1;
+}
+
+#live-clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 800; /* Extra Bold */
+  color: #ffffff !important;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+  display: block;
+  letter-spacing: -1px; /* Tighter look for JetBrains Mono */
+}
+
+#live-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff !important;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Responsive adjustment for Mobile */
+@media (max-width: 768px) {
+  #headerClock {
+    text-align: center;
+    margin-top: 10px;
+  }
+  #live-clock {
+    font-size: 1.6rem;
+  }
+}
+
+/* Pop-up (Modal) Header Gradient */
+.modal-header {
+  font-family: 'JetBrains Mono', monospace;
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); /* Modern Purple to Blue gradient */
+  color: white !important;
+  border-bottom: none !important;
+  /* Keeping it squared to match your main header */
+  border-radius: 0 !important; 
+}
+
+.modal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+}
+
+/* Make the Close (X) button white so it's visible */
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+
+/* Round the entire Modal */
+.modal-content {
+  border-radius: 20px !important; /* Adjust this number for more or less roundness */
+  overflow: hidden; /* This is crucial: it clips the header to the rounded corners */
+  border: none !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Reduce Modal Header Height */
+.modal-header {
+  padding: 12px 18px !important; /* Original is usually 16px or 20px */
+  min-height: auto !important;
+}
+
+.modal-header .modal-title {
+  font-size: 1.2rem !important; /* Slightly smaller title */
+  line-height: 1.2 !important;
+}
+
+/* Adjust the Close Button to center properly in a shorter header */
+.modal-header .btn-close {
+  padding: 0.5rem !important;
+  margin: -0.25rem -0.25rem -0.25rem auto !important;
+  font-size: 0.75rem !important; /* Smaller X button */
+}
+
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="d-flex align-items-center justify-content-center vh-100">
+  <div class="card p-5 shadow-lg text-center" style="max-width: 420px; width: 90%; border-radius: 30px;">
+    
+    <div class="mb-4">
+       <div class="d-inline-block p-3 rounded-circle bg-white bg-opacity-10 mb-3" style="border: 1px solid rgba(255,255,255,0.2)">
+         <i class="bi bi-rocket-takeoff-fill text-warning" style="font-size: 3rem;"></i>
+       </div>
+       <h4 class="fw-800 text-uppercase tracking-wider text-white">Cloudberry Kids Playschool</h4>
+       <p class="small opacity-75 text-white">Secure Management Portal</p>
+    </div>
+
+    <input type="password" id="loginPass" class="form-control mb-3 text-center p-3" placeholder="Enter Password" onkeypress="if(event.key==='Enter') verifyLogin()">
+    
+    <button id="loginBtn" class="btn btn-warning w-100 fw-bold p-3 shadow-sm" onclick="verifyLogin()" style="border-radius: 12px;">
+      <i class="bi bi-shield-lock-fill me-2"></i>ACCESS SYSTEM
+    </button>
+    
+    <div id="loginError" class="text-danger small mt-2" style="display:none;">Incorrect Password. Try again.</div>
+    
+    <div class="mt-4 opacity-50 small text-white">
+      v22.0 • Digital Future Ready
+    </div>
+  </div>
+</div>
+
+  <div id="mainApp" style="display: none;">
+
+<header class="main-header-wrapper">
+  <div class="main-header-gradient">
+    <div class="container-fluid px-4"> <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+        
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-white p-1 shadow-sm" style="width: 55px; height: 55px; min-width: 55px;">
+          <img id="schoolLogo" 
+     src="https://drive.google.com/drive/u/0/folders/0B33L-80NkUkuRDItcS1OcUl4VDA?resourcekey=0-aBOKHZQHvIO6JpRxua02BA" 
+     alt="Logo" 
+     onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/167/167707.png';"
+     style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+          <div class="text-white">
+            <h4 class="fw-800 m-0" style="letter-spacing: -1px; line-height: 1;">CLOUDBERRY KIDS PLAYSCHOOL</h4>
+            <small class="fw-bold opacity-75">Student Management System</small>
+          </div>
+        </div>
+
+        <div class="view-btn-group btn-group btn-group-sm bg-white p-1 rounded-3 shadow-sm">
+          <input type="radio" class="btn-check" name="view" id="viewList" checked onclick="setView('list')">
+          <label class="btn btn-outline-primary border-0 px-3" for="viewList">List</label>
+          
+          <input type="radio" class="btn-check" name="view" id="viewTile" onclick="setView('tile')">
+          <label class="btn btn-outline-primary border-0 px-3" for="viewTile">Tiles</label>
+          
+          <input type="radio" class="btn-check" name="view" id="viewKanban" onclick="setView('kanban')">
+          <label class="btn btn-outline-primary border-0 px-3" for="viewKanban">Kanban</label>
+        </div>
+
+        <div class="text-md-end text-center text-white">
+          <div id="live-clock" class="fw-800" style="font-size: 1.3rem; line-height: 1;">00:00:00</div>
+          <small id="live-date" class="opacity-75" style="font-size: 0.8rem; font-family: 'JetBrains Mono', monospace;">...</small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container-fluid px-4 mt-3">
+  <div class="app-container">
+
+<div id="left-panel">
+  <button class="metric-card bg-total" onclick="refreshAll()">
+    <small class="fw-bold opacity-75">TOTAL REGISTERED</small>
+    <h2 id="total-count" class="fw-800 m-0">0</h2>
+  </button>
+  
+  <button class="metric-card bg-rate">
+    <small class="fw-bold opacity-75">TODAY'S ATTENDANCE RATE</small>
+    <h2 id="attendance-rate" class="fw-800 m-0">0%</h2>
+  </button>
+  
+  <hr class="my-4 opacity-10">
+  
+  <button class="metric-card bg-open">
+    <small class="fw-bold opacity-75">TODAY'S PRESENT</small>
+    <h3 id="present-count" class="fw-800 m-0">0</h3>
+  </button>
+  
+  <button class="metric-card bg-critical">
+    <small class="fw-bold opacity-75">TODAY'S ABSENT</small>
+    <h3 id="absent-count" class="fw-800 m-0">0</h3>
+  </button>
+
+  <button class="btn btn-danger shadow" onclick="logout()" 
+        style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; border-radius: 50px; padding: 10px 20px; opacity: 0.8;"
+        onmouseover="this.style.opacity='1'" 
+        onmouseout="this.style.opacity='0.8'">
+  <i class="bi bi-box-arrow-right"></i> Logout
+</button>
+
+
+<button class="metric-card" onclick="startQRScanner()" style="background: #6f42c1; color: white; margin-top: 10px;">
+  <small class="fw-bold opacity-75">SCAN SCHOOL ID</small>
+  <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+    <i class="bi bi-qr-code-scan"></i>
+    <h3 class="fw-800 m-0" style="font-size: 1.2rem;">START SCAN</h3>
+  </div>
+</button>
+
+
+<div class="modal fade" id="qrModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;">
+      <div class="modal-header bg-dark text-white border-0">
+        <h6 class="modal-title fw-bold"><i class="bi bi-camera"></i> SCANNER ACTIVE</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopQRScanner()"></button>
+      </div>
+      <div class="modal-body p-4 text-center">
+        <div id="qr-reader" style="width: 100%; border-radius: 15px; overflow: hidden;"></div>
+        <p class="small text-muted mt-3 mb-0">Align the Student ID QR code within the frame.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+
+
+  <div class="mt-5 pt-4 border-top"> 
+    <h6 class="fw-bold small text-uppercase text-muted mb-3" style="letter-spacing: 1px;">
+      Program Count (Enrolled)
+    </h6>
+    <table class="table table-borderless table-sm small">
+      <tbody id="categoryTableBody">
+        </tbody>
+    </table>
+  </div>
+
+</div>
+
+    <div id="right-panel">
+      <div class="d-flex gap-3 mb-4 sticky-top bg-light p-2 rounded shadow-sm align-items-center">
+        <input type="text" id="searchInput" class="form-control border-0 shadow-none" placeholder="Search students, ID, parent, or status..." oninput="handleSearch()">
+        <button class="btn btn-outline-primary shadow-sm" onclick="exportToCSV()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">EXPORT CURRENT LIST</button>
+        
+
+<button onclick="showFinancialModal()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" class="btn btn-outline-primary shadow-sm">
+  <i class="bi bi-cash-stack me-2"></i>Financial Report
+</button>
+
+<button class="btn btn-outline-primary shadow-sm" onclick="showBulkArchiveModal()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+  <i class="bi bi-collection"></i> ARCHIVE BATCH
+</button>
+
+<button class="btn btn-outline-primary shadow-sm" onclick="showUnarchivePrompt()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+  <i class="bi bi-person-up"></i> RESTORE/RE-ENROLL STUDENT
+</button>
+
+        <button class="btn btn-primary fw-bold px-4" onclick="prepareNew()" data-bs-toggle="modal" data-bs-target="#taskModal">+ REGISTER</button>
+      </div>
+      <div id="viewContainer"></div>
+    </div>
+  </div>
+
+ <div class="modal fade" id="taskModal" tabindex="-1" style="z-index: 1050;">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content shadow-lg border-0" style="border-radius: 20px;">
+        <div class="modal-header bg-primary text-white">
+
+          
+
+
+
+          <h5 class="modal-title fw-800" id="modalTitle">Register New Student</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    </div>
+  
+  <div class="text-center" style="width: 120px;">
+    <div id="profilePicContainer" class="border rounded bg-light d-flex align-items-center justify-content-center" 
+         style="width: 100px; height: 100px; overflow: hidden; position: relative; cursor: pointer; border: 2px dashed #ccc !important;"
+         onclick="document.getElementById('profilePicInput').click()">
+      <img id="profilePicPreview" src="" class="img-fluid" style="display:none; object-fit: cover; width: 100%; height: 100%;">
+      <div id="profilePicPlaceholder" class="text-muted small">
+        <i class="bi bi-camera" style="font-size: 2rem;"></i><br>1x1 Photo
+      </div>
+    </div>
+    <input type="file" id="profilePicInput" hidden accept="image/*" onchange="uploadProfilePic(this)">
+    <input type="hidden" id="profilePicUrl"> </div>
+</div>
+          
+          <form id="taskForm">
+            <input type="hidden" id="taskId"><input type="hidden" id="attachmentUrl">
+            <div class="row g-3">
+              <div class="col-12"><div class="section-title">Personal Information</div></div>
+              <div class="col-md-2"><label class="fw-bold small text-muted">STUDENT ID</label><input type="text" id="displayId" class="form-control" placeholder="Enter ID"></div>
+              <div class="col-md-6"><label class="fw-bold small text-muted">FULL NAME</label><input type="text" id="description" class="form-control" required></div>
+              <div class="col-md-2"><label class="fw-bold small text-muted">SEX</label><select id="sex" class="form-select"><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+              <div class="col-md-2"><label class="fw-bold small text-muted">AGE</label><input type="text" id="age" class="form-control" readonly style="background:#f1f5f9"></div>
+              <div class="col-md-4"><label class="fw-bold small text-muted">DATE OF BIRTH</label><input type="date" id="dob" class="form-control" onchange="calculateAge()"></div>
+              <div class="col-md-8"><label class="fw-bold small text-muted">ADDRESS</label><input type="text" id="address" class="form-control"></div>
+              
+              <div class="col-12"><div class="section-title">Academic & Enrollment Details</div></div>
+              <div class="col-md-3"><label class="fw-bold small text-muted">ENROLLMENT TYPE</label><select id="enrollType" class="form-select"><option value="Full-Time">Full-Time</option><option value="Part-Time">Part-Time</option><option value="Scholar">Scholar</option><option value="Transferee">Transferee</option></select></div>
+              <div class="col-md-2"><label class="fw-bold small text-muted">TOTAL SESSIONS</label><input type="number" id="sessions" class="form-control"></div>
+              <div class="col-md-2"><label class="fw-bold small text-primary">REMAINING</label><input type="number" id="remaining" class="form-control" readonly style="background:#eef2ff; border: 1px solid #6366f1;"></div>
+              <div class="col-md-2"><label class="fw-bold small text-danger">ABSENCES (MAKE-UP)</label><input type="number" id="absences" class="form-control" readonly style="background:#fff1f2; border: 1px solid #f43f5e;"></div>
+              <div class="col-md-3"><label class="fw-bold small text-muted">PROGRAM</label><select id="category" class="form-select"></select></div>
+              <div class="col-md-3"><label class="fw-bold small text-muted">STATUS</label><select id="status" class="form-select"></select></div>
+
+             <div class="col-md-3">
+  <label class="fw-bold small text-muted">CLASS SCHEDULES</label>
+  <input type="text" id="priority" class="form-control" placeholder="e.g., M-W-F 8am">
+</div>
+
+
+
+
+
+
+
+              <div class="col-md-3"><label class="fw-bold small text-muted">ENCODER/STAFF</label><select id="owner" class="form-select"></select></div>
+              <div class="col-md-3"><label class="fw-bold small text-muted">ENROLLMENT DATE</label><input type="date" id="openDate" class="form-control"></div>
+              
+              <div class="col-12"><div class="section-title">Guardian & Contact Details</div></div>
+              <div class="col-md-6"><label class="fw-bold small text-muted">PARENT/GUARDIAN NAME</label><input type="text" id="parentName" class="form-control"></div>
+              <div class="col-md-6"><label class="fw-bold small text-muted">EMERGENCY CONTACT #</label><input type="text" id="econtact" class="form-control"></div>
+              
+              <div class="col-12"><div class="section-title">Program Cycle & Additional Details</div></div>
+<div class="col-md-4">
+  <label class="fw-bold small text-muted">CYCLE (NAME/BATCH)</label>
+  <input type="text" id="cycleName" class="form-control" placeholder="e.g. Batch 2024-A">
+</div>
+<div class="col-md-4">
+  <label class="fw-bold small text-muted">CYCLE START DATE</label>
+  <input type="date" id="cycleStart" class="form-control">
+</div>
+<div class="col-md-4">
+  <label class="fw-bold small text-muted">CYCLE END DATE</label>
+  <input type="date" id="cycleEnd" class="form-control">
+</div>
+
+<div class="col-md-3">
+  <label class="fw-bold small text-muted">FREE SESSIONS</label>
+  <input type="text" id="freeSessions" class="form-control" placeholder="e.g. 2 Sessions">
+</div>
+<div class="col-md-3">
+  <label class="fw-bold small text-muted">UNIFORM AVAILED</label>
+  <select id="uniformAvailed" class="form-select">
+    <option value="No">No</option>
+    <option value="Yes">Yes</option>
+  </select>
+</div>
+<div class="col-md-3">
+  <label class="fw-bold small text-muted">UNIFORM PAYMENT</label>
+  <select id="uniformPayment" class="form-select">
+    <option value="Unpaid">Unpaid</option>
+    <option value="Paid">Paid</option>
+  </select>
+</div>
+
+<div class="col-md-3">
+  <label class="fw-bold small text-muted">UNIFORM AMOUNT PAID</label>
+  <div class="input-group">
+    <span class="input-group-text bg-light fw-bold small">₱</span>
+    <input type="number" id="uniformAmount" class="form-control" placeholder="0.00" step="0.01">
+  </div>
+</div>
+
+<div class="col-12">
+  <label class="fw-bold small text-muted d-block mb-2">CHECKLIST OF DOCUMENTS SUBMITTED</label>
+  <div class="d-flex flex-wrap gap-3">
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="1x1 ID" id="checkId">
+      <label class="form-check-label small" for="checkId">1x1 ID</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="Birth Certificate" id="checkBirth">
+      <label class="form-check-label small" for="checkBirth">Birth Certificate</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="Vaccine Card" id="checkVaccine">
+      <label class="form-check-label small" for="checkVaccine">Vaccine Card</label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" value="Others" id="checkOthers">
+      <label class="form-check-label small" for="checkOthers">Others</label>
+    </div>
+  </div>
+</div>
+
+
+
+              <div class="col-12 mt-3 d-flex gap-2">
+                 <button type="button" id="paymentBtn" class="btn btn-warning fw-bold" onclick="openPaymentModal()" style="display:none;">FEES & PAYMENTS</button>
+              </div>
+
+
+
+
+            <div class="col-12 mt-3">
+  <label class="fw-bold small text-primary">RECORDS ATTACHMENT (MULTIPLE)</label>
+  <div class="input-group">
+    <input type="file" id="fileAttachment" class="form-control" multiple>
+    <div id="existingFileLink" class="ms-2 d-flex flex-wrap gap-2"></div>
+  </div>
+</div>
+
+
+              <div class="col-md-5"><label class="fw-bold small text-primary">TEACHER'S NOTE</label><textarea id="newComment" class="form-control" rows="5"></textarea></div>
+              <div class="col-md-7"><label class="fw-bold small text-muted">RECORDS LOG</label><textarea id="updates" class="form-control history-log" rows="5" readonly></textarea></div>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+              <div>
+                <button type="button" id="deleteBtn" class="btn btn-outline-danger me-2" onclick="confirmArchive()">Discard Record</button>
+                <button type="button" id="attendanceBtn" class="btn btn-success fw-bold me-2" onclick="markAttendance('Present')" style="display:none;">MARK PRESENT</button>
+                <button type="button" id="absentBtn" class="btn btn-danger fw-bold me-2" onclick="markAttendance('Absent')" style="display:none;">MARK ABSENT</button>
+                <button type="button" id="makeupBtn" class="btn btn-info text-white fw-bold me-2" onclick="markAttendance('Make-up')" style="display:none;">LOG MAKE-UP</button>
+                <button type="button" id="viewHistoryBtn" class="btn btn-outline-secondary fw-bold" onclick="openAttendanceModal()" style="display:none;">VIEW HISTORY</button>
+              </div>
+              <button type="button" id="saveBtn" class="btn btn-primary px-5 fw-bold" onclick="saveTask()">COMMIT CHANGES</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+<div class="modal fade" id="attendanceHistoryModal" tabindex="-1" style="z-index: 3000 !important;">
+  <div class="modal-dialog modal-lg shadow-lg">
+      <div class="modal-content shadow-lg" style="border-radius: 15px;">
+        <div class="modal-header bg-dark text-white">
+          <h6 class="modal-title fw-bold">ATTENDANCE HISTORY LOGS</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle small">
+              <thead class="table-light">
+                <tr>
+                  <th>Date/Time</th>
+                  <th>Student ID</th>
+                  <th>Status</th>
+                  <th class="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceLogBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+<div class="modal fade" id="qrModal" tabindex="-1" style="z-index: 4000;">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content" style="border-radius: 15px;">
+      <div class="modal-header bg-dark text-white">
+        <h6 class="modal-title">SCANNER ACTIVE</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" onclick="stopQRScanner()"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div id="qr-reader" style="width: 100%;"></div>
+        <p class="mt-3 text-muted">Place the School ID QR code in front of the camera.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="modal fade" id="paymentModal" tabindex="-1" style="z-index: 3000;">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 15px;">
+      <div class="modal-header bg-warning py-2">
+<h6 class="modal-title fw-bold text-white opacity-90" style="letter-spacing: 1px; font-size: 1.5rem;">
+  FEES, PAYMENTS & HISTORY
+</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-5 border-end">
+            <label class="small fw-bold text-uppercase mb-2 d-block">New Transaction</label>
+            <div class="row g-2">
+              <div class="col-6"><label class="small fw-bold">Session Rate</label><input type="text" id="paySessAmt" class="form-control form-control-sm"></div>
+              <div class="col-6"><label class="small fw-bold">Total Fee</label><input type="text" id="payTotalFee" class="form-control form-control-sm"></div>
+              <div class="col-6"><label class="small fw-bold">Amount Paid</label><input type="number" id="payAmountPaid" class="form-control form-control-sm" oninput="calcBalance()"></div>
+              <div class="col-6"><label class="small fw-bold text-danger">Balance Due</label><input type="number" id="payBalance" class="form-control form-control-sm" readonly style="background:#fff1f2"></div>
+
+<div class="mt-3 p-3 rounded" style="background: #fff9db; border: 1px solid #ffe066;">
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <label class="small fw-bold text-muted text-uppercase" style="letter-spacing: 1px;">Payment Due Date</label>
+      <input type="date" id="dueDate" class="form-control border-0 shadow-sm" style="background: white;">
+    </div>
+    <div class="col-md-6 text-end">
+      <small class="text-muted d-block">Current Balance</small>
+      <span id="balanceDueDisplay" class="h4 fw-bold text-danger">₱ 0.00</span>
+    </div>
+  </div>
+</div>
+
+              <div class="col-12"><label class="small fw-bold">Payment Status</label>
+              <select id="payStatus" class="form-select form-select-sm">
+  <option>Unpaid</option>
+  <option>Partially Paid</option>
+  <option>Fully Paid</option>
+</select></div>
+              <div class="col-6"><label class="small fw-bold text-muted">Mode</label><select id="payMode" class="form-select form-select-sm"><option>Cash</option><option>Gcash</option><option>Bank Transfer</option></select></div>
+              <div class="col-6"><label class="small fw-bold text-muted">Ref #</label><input type="text" id="payReceipt" class="form-control form-control-sm"></div>
+              <div class="col-6" style="display:none;"><input type="date" id="payDue"></div> <button class="btn btn-primary w-100 mt-3 fw-bold btn-sm" onclick="stowPayment()">UPDATE PAYMENT</button>
+            </div>
+          </div>
+          <div class="col-md-7">
+            <label class="small fw-bold text-uppercase mb-2 d-block text-muted">Transaction History</label>
+            <div style="max-height: 250px; overflow-y: auto;">
+              <table class="table table-sm table-striped small">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Mode</th>
+                    <th>Ref</th>
+                  </tr>
+                </thead>
+                <tbody id="paymentHistoryBody">
+                  </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let allTasks = [], filteredTasks = [], currentView = 'list', lookupData = {}, currentPayment = {};
+
+ // 1. THE GATEKEEPER: Checks session on page load
+
+
+  let clockInterval;
+
+  // 1. THIS RUNS EVERY TIME THE PAGE LOADS (OR RELOADS)
+  window.onload = () => {
+    resetLoginForm(); // Force the form to be clean
+    
+    const loggedIn = localStorage.getItem('isLoggedIn');
+    if (loggedIn === 'true') {
+      showMainApp();
+    } else {
+      showLoginPage();
+    }
+  };
+
+  // 2. HELPER: RESET THE LOGIN FORM
+  function resetLoginForm() {
+    const btn = document.getElementById('loginBtn');
+    const passInput = document.getElementById('loginPass');
+    const errorMsg = document.getElementById('loginError');
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Access System";
+    }
+    if (passInput) {
+      passInput.value = ""; 
+    }
+    if (errorMsg) {
+      errorMsg.style.display = "none";
+    }
+  }
+
+  // 3. HELPER: SHOW LOGIN PAGE
+  function showLoginPage() {
+    const mainApp = document.getElementById('mainApp');
+    const loginScreen = document.getElementById('loginScreen');
+    
+    if (mainApp) mainApp.style.display = 'none';
+    if (loginScreen) {
+      loginScreen.style.setProperty('display', 'flex', 'important');
+    }
+    resetLoginForm();
+  }
+
+function logout() {
+  if (confirm("Are you sure you want to logout?")) {
+    // 1. Clear the session
+    localStorage.removeItem('isLoggedIn');
+    
+    // 2. Stop the clock if it's running
+    if (clockInterval) clearInterval(clockInterval);
+
+    // 3. Manually reset the login form so it's fresh
+    const btn = document.getElementById('loginBtn');
+    const passInput = document.getElementById('loginPass');
+    const errorMsg = document.getElementById('loginError');
+
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Access System";
+    }
+    if (passInput) {
+      passInput.value = ""; // This removes the dots!
+    }
+    if (errorMsg) {
+      errorMsg.style.display = "none";
+    }
+
+    // 4. Swap the screens instantly
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginScreen').style.setProperty('display', 'flex', 'important');
+    
+    console.log("Logged out successfully.");
+  }
+}
+
+  // 5. SHOW MAIN APP (Triggered after successful login)
+  function showMainApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('loginScreen').classList.remove('d-flex');
+    document.getElementById('mainApp').style.display = 'block';
+
+    startClock();
+
+    // Load your Google Sheets Data
+    google.script.run.withSuccessHandler(l => { 
+      lookupData = l; 
+      populateLookups(l); 
+      refreshAll(); 
+    }).getLookups();
+  }
+
+  function startClock() {
+    const update = () => {
+      const now = new Date();
+      const d = document.getElementById('live-date');
+      const c = document.getElementById('live-clock');
+      if (d && c) {
+        d.innerText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        c.innerText = now.toLocaleTimeString('en-US', { hour12: false });
+      }
+    };
+    update();
+    clockInterval = setInterval(update, 1000);
+  }
+
+  function verifyLogin() {
+    const passInput = document.getElementById('loginPass');
+    const btn = document.getElementById('loginBtn');
+    
+    if (!passInput.value) return;
+
+    btn.disabled = true;
+    btn.innerText = "Verifying...";
+
+    google.script.run
+      .withSuccessHandler(isValid => {
+        if (isValid) {
+          localStorage.setItem('isLoggedIn', 'true');
+          showMainApp();
+        } else {
+          document.getElementById('loginError').style.display = "block";
+          btn.disabled = false;
+          btn.innerText = "Access System";
+          passInput.value = "";
+        }
+      })
+      .checkLogin(passInput.value);
+  }
+
+
+
+    function calculateAge() {
+      const birthDate = new Date(document.getElementById('dob').value);
+      if (isNaN(birthDate)) return;
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+      document.getElementById('age').value = age > 0 ? age : 0;
+    }
+
+    function setView(v) { currentView = v; renderMain(); }
+    function refreshAll() { google.script.run.withSuccessHandler(data => { allTasks = data; filteredTasks = data; updateGlobalMetrics(); renderMain(); }).getTasks(); }
+
+function updateGlobalMetrics() {
+    google.script.run.withSuccessHandler(m => {
+      // 1. Update the Metric Cards
+      document.getElementById('total-count').innerText = m.totalStudents;
+      document.getElementById('attendance-rate').innerText = m.attendanceRate;
+      document.getElementById('present-count').innerText = m.todayPresent;
+      document.getElementById('absent-count').innerText = m.todayAbsent;
+      
+      // 2. Re-populate the Program Table
+      const tableBody = document.getElementById('categoryTableBody');
+      if (tableBody && m.categoryCounts) {
+        tableBody.innerHTML = ""; 
+        const rows = Object.entries(m.categoryCounts)
+          .sort(([,a], [,b]) => b - a)
+          .map(([program, count]) => `
+            <tr>
+              <td class="text-muted py-1">${program}</td>
+              <td class="text-end fw-bold text-primary py-1">${count}</td>
+            </tr>
+          `).join('');
+        tableBody.innerHTML = rows;
+      }
+    }).getTaskMetrics();
+  }
+
+    function renderMain() {
+      const container = document.getElementById('viewContainer');
+      container.innerHTML = "";
+      
+if (currentView === 'list') {
+        let h = `
+          <div class="table-responsive bg-white rounded shadow-sm">
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Student Name</th>
+                  <th>Today's Status</th>
+                  <th>Program Type</th>
+                  <th>Class Schedules</th>
+                  <th>Status</th>
+                  <th>Payment</th> <th>Balance</th>
+              
+
+                </tr>
+              </thead>
+              <tbody>`;
+
+        filteredTasks.forEach(t => {
+          // t[16] is the attendance status we added in code.gs
+          const attendanceStatus = t[16]; 
+          // 1. THIS DATA COMES FROM YOUR code.gs UPDATE
+          const paymentStatus = t[17]; 
+          const currentBalance = t[18];
+
+          let attendanceBadge = '';
+
+          // Visual badges for Today's Attendance
+          if (attendanceStatus === 'Present' || attendanceStatus === 'Make-up') {
+            attendanceBadge = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2">Present</span>`;
+          } else if (attendanceStatus === 'Absent') {
+            attendanceBadge = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2">Absent</span>`;
+          } else {
+            attendanceBadge = `<span class="badge bg-light text-muted border px-2">Pending</span>`;
+          }
+
+          // --- PASTE YOUR NEW LINES HERE ---
+  // Create a visual badge for Payment Status
+  let paymentBadge = '';
+  if (paymentStatus === 'Fully Paid') {
+    paymentBadge = `<span class="badge bg-success">Paid</span>`;
+  } else if (paymentStatus === 'Partially Paid') {
+    paymentBadge = `<span class="badge bg-warning text-dark">Partial</span>`;
+  } else {
+    paymentBadge = `<span class="badge bg-danger">Unpaid</span>`;
+  }
+
+          
+
+          h += `<tr onclick="editTask('${t[0]}')" style="cursor:pointer">
+            <td class="fw-bold text-muted">${t[0]}</td>
+            <td class="fw-bold">${t[6]}</td>
+            <td>${attendanceBadge}</td>
+            <td><span class="badge bg-light text-primary">${t[1]}</span></td>
+            <td class="${t[2] === 'At Risk' ? 'text-danger fw-bold' : ''}">${t[2]}</td>
+            <td>
+              <span class="status-pill ${['Graduated', 'Completed', 'Inactive'].includes(t[5]) ? 'bg-secondary text-white' : 'bg-warning text-dark'}">
+                ${t[5]}
+              </span>
+            </td>
+            <td>${paymentBadge}</td> <td class="fw-bold text-danger">₱${parseFloat(currentBalance || 0).toLocaleString()}</td>
+          </tr>`;
+        });
+
+        
+        container.innerHTML = h + '</tbody></table></div>';
+      
+      } 
+      else if (currentView === 'tile') {
+        const grid = document.createElement('div');
+        grid.className = "row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3";
+        filteredTasks.forEach(t => {
+          const col = document.createElement('div');
+          col.className = "col";
+          col.innerHTML = `<div class="task-card" onclick="editTask('${t[0]}')">
+            <span class="status-pill ${['Graduated','Completed','Inactive'].includes(t[5]) ? 'bg-secondary text-white' : 'bg-warning text-dark'} float-end">${t[5]}</span>
+            <div class="small text-muted">ID: ${t[0]}</div>
+            <div class="task-title">${t[6]}</div>
+            <div class="mt-2 small fw-bold text-primary">${t[1]}</div>
+          </div>`;
+          grid.appendChild(col);
+        });
+        container.appendChild(grid);
+      }
+      else if (currentView === 'kanban') {
+        const board = document.createElement('div');
+        board.className = "kanban-board";
+        lookupData.statuses.forEach(status => {
+          const colTasks = filteredTasks.filter(t => t[5] === status);
+          const col = document.createElement('div');
+          col.className = "kanban-col";
+          col.innerHTML = `<div class="kanban-col-title"><span>${status}</span><span class="badge bg-white text-dark shadow-sm">${colTasks.length}</span></div>`;
+          colTasks.forEach(t => {
+            const card = document.createElement('div');
+            card.className = "task-card bg-white";
+            card.onclick = () => editTask(t[0]);
+            card.innerHTML = `<div class="task-title" style="font-size:0.85rem">${t[6]}</div><div class="small text-muted">ID: ${t[0]}</div>`;
+            col.appendChild(card);
+          });
+          board.appendChild(col);
+        });
+        container.appendChild(board);
+      }
+    }
+
+    function handleSearch() { const q = document.getElementById('searchInput').value.toLowerCase(); filteredTasks = allTasks.filter(t => t.join(' ').toLowerCase().includes(q)); renderMain(); }
+    
+    function filterByMetric(type) {
+      if(type === 'Critical') filteredTasks = allTasks.filter(t => t[2] === 'At Risk' || t[2] === 'Probation');
+      else if(type === 'Open') filteredTasks = allTasks.filter(t => !['Graduated','Completed','Inactive'].includes(t[5]));
+      renderMain();
+    }
+
+    function populateLookups(l) {
+      const f = (id, a) => document.getElementById(id).innerHTML = a.map(i => `<option value="${i}">${i}</option>`).join('');
+      f('category', l.categories); f('owner', l.owners); f('status', l.statuses);
+    }
+
+    function prepareNew() { 
+      document.getElementById('taskForm').reset(); 
+      document.getElementById('taskId').value = ""; 
+      document.getElementById('displayId').value = ""; 
+      document.getElementById('displayId').disabled = false;
+      document.getElementById('attachmentUrl').value = "";
+      document.getElementById('existingFileLink').innerHTML = "";
+      document.getElementById('deleteBtn').style.display = "block";
+      document.getElementById('attendanceBtn').style.display = "none";
+      document.getElementById('absentBtn').style.display = "none";
+      document.getElementById('makeupBtn').style.display = "none";
+      document.getElementById('viewHistoryBtn').style.display = "none";
+      document.getElementById('uniformAmount').value = '';
+      document.getElementById('paymentBtn').style.display = "none";
+      document.getElementById('modalTitle').innerText = "Register New Student";
+      currentPayment = { sessAmt: "", totalFee: "", status: "Unpaid", paid: 0, due: "", mode: "Cash", receipt: "" };
+    
+    // --- ADD THESE LINES TO RESET THE PROFILE PIC ---
+  document.getElementById('profilePicUrl').value = ""; // Clears the hidden URL
+  document.getElementById('profilePicInput').value = ""; // Clears the file selector
+  
+  const preview = document.getElementById('profilePicPreview');
+  const placeholder = document.getElementById('profilePicPlaceholder');
+  
+  preview.src = ""; // Removes the old image source
+  preview.style.display = "none"; // Hides the image element
+  
+  placeholder.style.display = "block"; // Shows the camera icon again
+  placeholder.innerHTML = '<i class="bi bi-camera" style="font-size: 2rem;"></i><br>1x1 Photo';
+  // ------------------------------------------------
+
+    
+    }
+
+function editTask(id) {
+  const t = allTasks.find(x => x[0] == id);
+  document.getElementById('taskId').value = t[0];
+  document.getElementById('displayId').value = t[0];
+  document.getElementById('displayId').disabled = true;
+  document.getElementById('category').value = t[1];
+  document.getElementById('priority').value = t[2];
+  document.getElementById('owner').value = t[3];
+  document.getElementById('status').value = t[5];
+  document.getElementById('description').value = t[6];
+  document.getElementById('attachmentUrl').value = t[7] || "";
+  document.getElementById('openDate').value = t[8];
+  document.getElementById('updates').value = t[15] || "";
+
+  // === RESET NEW FIELDS TO PREVENT DATA CARRY-OVER ===
+  document.getElementById('cycleName').value = "";
+  document.getElementById('cycleStart').value = "";
+  document.getElementById('cycleEnd').value = "";
+  document.getElementById('freeSessions').value = "";
+  document.getElementById('uniformAvailed').value = "No";
+  document.getElementById('uniformPayment').value = "Unpaid";
+  document.getElementById('uniformAmount').value = "";
+  document.getElementById('checkId').checked = false;
+  document.getElementById('checkBirth').checked = false;
+  document.getElementById('checkVaccine').checked = false;
+  document.getElementById('checkOthers').checked = false;
+
+  try {
+    const m = JSON.parse(t[4]);
+    document.getElementById('dob').value = m.dob || "";
+    document.getElementById('age').value = m.age || "";
+    document.getElementById('sex').value = m.sex || "Male";
+    document.getElementById('enrollType').value = m.etype || "Full-Time";
+    document.getElementById('sessions').value = m.sessions || "";
+    document.getElementById('remaining').value = m.remaining !== undefined ? m.remaining : m.sessions;
+    document.getElementById('absences').value = m.absences || 0;
+    document.getElementById('parentName').value = m.parent || "";
+    document.getElementById('address').value = m.addr || "";
+    document.getElementById('econtact').value = m.econtact || "";
+
+
+// Inside editTask(id) -> try block
+const profilePicUrl = m.profilePic || "";
+document.getElementById('profilePicUrl').value = profilePicUrl || "";
+
+const preview = document.getElementById('profilePicPreview');
+const placeholder = document.getElementById('profilePicPlaceholder');
+
+if (profilePicUrl && profilePicUrl !== "") {
+    // Add a cache-buster (?t=...) to force the browser to reload the image
+    const cleanUrl = profilePicUrl.split('&t=')[0]; 
+    preview.src = cleanUrl + "&t=" + new Date().getTime();
+    
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    
+    // Fallback: If the image fails to load, show placeholder
+    preview.onerror = function() {
+        this.style.display = 'none';
+        placeholder.style.display = 'block';
+        placeholder.innerHTML = '<i class="bi bi-exclamation-triangle"></i><br>Error Loading';
+    };
+} else {
+    preview.src = "";
+    preview.style.display = 'none';
+    placeholder.style.display = 'block';
+    placeholder.innerHTML = '<i class="bi bi-camera" style="font-size: 2rem;"></i><br>1x1 Photo';
+}
+
+
+    
+    // === ASSIGN NEW UNIQUE VALUES FROM METADATA ===
+    document.getElementById('cycleName').value = m.cycleName || "";
+    document.getElementById('cycleStart').value = m.cycleStart || "";
+    document.getElementById('cycleEnd').value = m.cycleEnd || "";
+    document.getElementById('freeSessions').value = m.freeSessions || "";
+    document.getElementById('uniformAvailed').value = m.uniformAvailed || "No";
+    document.getElementById('uniformPayment').value = m.uniformPayment || "Unpaid";
+    document.getElementById('uniformAmount').value = m.uniformAmount || "";
+
+    if (m.checklist) {
+      document.getElementById('checkId').checked = !!m.checklist.id1x1;
+      document.getElementById('checkBirth').checked = !!m.checklist.birthCert;
+      document.getElementById('checkVaccine').checked = !!m.checklist.vaccine;
+      document.getElementById('checkOthers').checked = !!m.checklist.others;
+      
+    }
+    
+    // 1. FETCH PAYMENT OBJECT FIRST
+    currentPayment = m.payment || { sessAmt: "", totalFee: "", status: "Unpaid", paid: 0, due: "", mode: "Cash", receipt: "" };
+
+    // 2. FETCH BALANCE FROM PAYMENT DATA (Fixes the NaN/0 issue)
+    const balanceDue = parseFloat(currentPayment.due) || 0;
+    const balanceDisplay = document.getElementById('balanceDueDisplay');
+    if (balanceDisplay) {
+      balanceDisplay.innerText = "₱" + balanceDue.toLocaleString(undefined, {minimumFractionDigits: 2});
+    }
+
+    // 3. INTEGRATE DUE DATE & COLOR LOGIC
+    const dueDateInput = document.getElementById('dueDate');
+    if (dueDateInput) {
+      dueDateInput.value = m.dueDate || "";
+      
+      const today = new Date().toISOString().split('T')[0];
+      if (balanceDue > 0 && m.dueDate && m.dueDate < today) {
+        dueDateInput.style.border = "2px solid #dc3545"; 
+        dueDateInput.style.backgroundColor = "#ffdee2";
+      } else {
+        dueDateInput.style.border = "1px solid #ced4da";
+        dueDateInput.style.backgroundColor = "white";
+      }
+    }
+    
+    // Render Payment History Table
+    const historyBody = document.getElementById('paymentHistoryBody');
+    if (currentPayment.paymentHistory && currentPayment.paymentHistory.length > 0) {
+      historyBody.innerHTML = currentPayment.paymentHistory.map(p => `
+        <tr>
+          <td>${p.date}</td>
+          <td class="fw-bold">₱${parseFloat(p.amount).toLocaleString()}</td>
+          <td>${p.mode}</td>
+          <td class="text-muted small">${p.receipt || '-'}</td>
+        </tr>
+      `).join('');
+    } else {
+      historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No payment history available</td></tr>';
+    }
+
+  } catch(e) { 
+    console.log("Meta parse error", e);
+  }
+
+// --- MULTIPLE ATTACHMENTS WITH VISIBLE DELETE BUTTON ---
+ const linkContainer = document.getElementById('existingFileLink');
+  linkContainer.innerHTML = ""; 
+  
+  if (t[7]) {
+    const urls = t[7].split(",").filter(u => u.trim() !== ""); 
+    urls.forEach((url, index) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = "d-flex align-items-center bg-primary text-white";
+      
+      wrapper.innerHTML = `
+        <a href="${url.trim()}" target="_blank" class="btn btn-sm btn-link text-decoration-none flex-grow-1">
+          <i class="bi bi-file-earmark"></i> File ${index + 1}
+        </a>
+        <button type="button" class="btn btn-sm text-danger" onclick="deleteSpecificFile('${id}', ${index})">
+          <i class="bi bi-trash"></i>
+        </button>
+      `;
+      linkContainer.appendChild(wrapper);
+    });
+  }
+
+
+
+  document.getElementById('deleteBtn').style.display = "inline-block";
+  document.getElementById('attendanceBtn').style.display = "inline-block";
+  document.getElementById('absentBtn').style.display = "inline-block";
+  document.getElementById('makeupBtn').style.display = "inline-block";
+  document.getElementById('viewHistoryBtn').style.display = "inline-block";
+  document.getElementById('paymentBtn').style.display = "inline-block";
+  document.getElementById('modalTitle').innerText = "Edit Student: " + t[6];
+  new bootstrap.Modal(document.getElementById('taskModal')).show();
+}
+
+
+
+
+function calcBalance() {
+  const totalFee = parseFloat(document.getElementById('payTotalFee').value) || 0;
+  
+  // 1. Get what was already saved in history before today
+  const previouslyPaid = parseFloat(currentPayment.paid) || 0;
+  
+  // 2. Get what is being typed in the box right now
+  const currentInput = parseFloat(document.getElementById('payAmountPaid').value) || 0;
+  
+  // 3. Total paid is the sum of both
+  const totalPaidCombined = previouslyPaid + currentInput;
+  
+  // 4. Calculate Balance: Total Fee minus everything paid so far
+  const balanceRemaining = totalFee - totalPaidCombined;
+  
+  // 5. Update UI: Balance should show Total Fee if nothing is paid yet
+  document.getElementById('payBalance').value = balanceRemaining > 0 ? balanceRemaining.toFixed(2) : 0;
+
+  // 6. Auto-tag Status
+  const statEl = document.getElementById('payStatus');
+  if (totalPaidCombined <= 0) {
+    statEl.value = "Unpaid";
+  } else if (totalPaidCombined >= totalFee) {
+    statEl.value = "Fully Paid";
+  } else {
+    statEl.value = "Partially Paid";
+  }
+}
+
+function openAttendanceModal() {
+  const id = document.getElementById('taskId').value;
+  const logBody = document.getElementById('attendanceLogBody');
+  logBody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+  
+  // Create and show the modal instance
+  const historyModalElem = document.getElementById('attendanceHistoryModal');
+  const historyModal = new bootstrap.Modal(historyModalElem);
+  historyModal.show();
+  
+  google.script.run.withSuccessHandler(logs => {
+    if (!logs || logs.length === 0) {
+      logBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No records found.</td></tr>';
+      return;
+    }
+    logBody.innerHTML = logs.reverse().map(row => `
+      <tr>
+        <td>${row[0]}</td>
+        <td class="fw-bold">${row[1]}</td>
+        <td><span class="badge ${row[3] === 'Present' ? 'bg-success' : (row[3] === 'Absent' ? 'bg-danger' : 'bg-info')}">${row[3]}</span></td>
+        <td class="text-end">
+           <button class="btn btn-sm btn-outline-danger" onclick="deleteLog('${row[0]}','${row[1]}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }).getStudentAttendance(id);
+}
+
+
+    function deleteLog(timestamp, studentId) {
+      if(!confirm("Delete this log and REVERT the session count?")) return;
+      google.script.run.withSuccessHandler(res => {
+        alert("Log deleted. Student counts updated.");
+        document.getElementById('remaining').value = res.remaining;
+        document.getElementById('absences').value = res.absences;
+        bootstrap.Modal.getInstance(document.getElementById('attendanceHistoryModal')).hide();
+        refreshAll();
+      }).deleteAttendanceRecord(studentId, timestamp);
+    }
+
+
+function openPaymentModal() {
+  // 1. Populate existing fields from the 'currentPayment' global variable
+  document.getElementById('paySessAmt').value = currentPayment.sessAmt || "";
+  document.getElementById('payTotalFee').value = currentPayment.totalFee || "";
+  document.getElementById('payAmountPaid').value = 0; 
+  document.getElementById('payStatus').value = currentPayment.status || "Unpaid";
+  document.getElementById('payMode').value = "Cash";
+  document.getElementById('payReceipt').value = "";
+  
+  // 2. Render History Table
+  const historyBody = document.getElementById('paymentHistoryBody');
+  if (currentPayment.paymentHistory && currentPayment.paymentHistory.length > 0) {
+    historyBody.innerHTML = currentPayment.paymentHistory.map(p => `
+      <tr>
+        <td>${p.date}</td>
+        <td class="fw-bold">₱${parseFloat(p.amount).toLocaleString()}</td>
+        <td>${p.mode}</td>
+        <td class="text-muted small">${p.receipt || '-'}</td>
+      </tr>
+    `).join('');
+  } else {
+    historyBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No payment records found.</td></tr>';
+  }
+
+  // 3. Trigger math calculation
+  calcBalance();
+
+  // 4. Initialize and show modal with depth fix
+  var payModalElem = document.getElementById('paymentModal');
+  var payModal = new bootstrap.Modal(payModalElem);
+  payModal.show();
+}
+
+function stowPayment() {
+  const amount = parseFloat(document.getElementById('payAmountPaid').value) || 0;
+  const totalFee = parseFloat(document.getElementById('payTotalFee').value) || 0;
+  
+  if (amount > 0) {
+    // 1. Create a new transaction history entry
+    const newTx = {
+      date: new Date().toLocaleDateString(),
+      amount: amount,
+      mode: document.getElementById('payMode').value,
+      receipt: document.getElementById('payReceipt').value
+    };
+
+    // 2. Add this entry to the history array
+    if (!currentPayment.paymentHistory) currentPayment.paymentHistory = [];
+    currentPayment.paymentHistory.push(newTx);
+    
+    // 3. Update the aggregate total of all payments
+    currentPayment.paid = (parseFloat(currentPayment.paid) || 0) + amount;
+  }
+
+  // Finalize data for the record object
+  currentPayment.totalFee = totalFee;
+  currentPayment.sessAmt = document.getElementById('paySessAmt').value;
+  
+  // Final check for the overall payment status
+  if (currentPayment.paid >= totalFee) {
+    currentPayment.status = "Fully Paid";
+    currentPayment.due = 0;
+  } else if (currentPayment.paid > 0) {
+    currentPayment.status = "Partially Paid";
+    currentPayment.due = totalFee - currentPayment.paid;
+  } else {
+    currentPayment.status = "Unpaid";
+    currentPayment.due = totalFee;
+  }
+
+  alert("Payment staged as " + currentPayment.status + ". Balance remaining: ₱" + (currentPayment.due || 0));
+  bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+}
+
+    function unarchivePrompt() {
+      const id = prompt("Enter the Student ID to Restore from Archive:");
+      if (!id) return;
+      google.script.run.withSuccessHandler(res => {
+        if(res.success) { alert("Student successfully restored to active list."); refreshAll(); }
+        else { alert("Error: " + res.message); }
+      }).unarchiveStudent(id);
+    }
+
+
+
+    function markAttendance(status) {
+      const id = document.getElementById('taskId').value;
+      const name = document.getElementById('description').value;
+      const btnP = document.getElementById('attendanceBtn');
+      const btnA = document.getElementById('absentBtn');
+      const btnM = document.getElementById('makeupBtn');
+      if (!confirm(`Mark ${name} as ${status.toUpperCase()}?`)) return;
+      btnP.disabled = true; btnA.disabled = true; btnM.disabled = true;
+
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(`Attendance logged as ${status}!`);
+          document.getElementById('remaining').value = res.remaining;
+          document.getElementById('absences').value = res.absences;
+          btnP.disabled = false; btnA.disabled = false; btnM.disabled = false;
+          refreshAll();
+        })
+        .withFailureHandler(err => {
+          alert(err.message);
+          btnP.disabled = false; btnA.disabled = false; btnM.disabled = false;
+        })
+        .logAttendance(id, name, status);
+    }
+
+async function saveTask() {
+  const saveBtn = document.getElementById('saveBtn');
+  const fileInput = document.getElementById('fileAttachment');
+  const files = fileInput.files;
+  const manualId = document.getElementById('displayId').value.trim();
+  let allUrls = document.getElementById('attachmentUrl').value || ""; 
+  
+  if (!manualId) { alert("Student ID is required"); return; }
+  if (!document.getElementById('description').value) { alert("Student Name is required"); return; }
+  
+  saveBtn.disabled = true; 
+  saveBtn.innerText = "Processing...";
+
+  try {
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+        
+        const url = await new Promise((resolve) => {
+          google.script.run.withSuccessHandler(resolve).uploadFileToDrive(base64, file.name);
+        });
+        
+        allUrls = allUrls ? allUrls + "," + url : url;
+      }
+      
+      // === THE FIX: RESET THE INPUT AFTER UPLOAD ===
+      fileInput.value = ""; 
+    }
+    
+    commitTaskData(allUrls);
+    
+  } catch (error) {
+    alert("Upload failed: " + error);
+    saveBtn.disabled = false;
+    saveBtn.innerText = "COMMIT CHANGES";
+  }
+}
+
+
+function commitTaskData(url) {
+  const existingId = document.getElementById('taskId').value;
+  const manualId = document.getElementById('displayId').value.trim();
+  
+  // Fetch the Payment Due Date from the UI
+  const paymentDueDate = document.getElementById('dueDate').value;
+ 
+  
+
+  const d = { 
+    id: existingId || manualId, 
+    category: document.getElementById('category').value, 
+    priority: document.getElementById('priority').value, 
+    owner: document.getElementById('owner').value, 
+    status: document.getElementById('status').value, 
+    description: document.getElementById('description').value, 
+    attachmentUrl: url, 
+    openDate: document.getElementById('openDate').value, 
+
+
+    // --- INTEGRATED DUE DATE ---
+    dueDate: paymentDueDate, 
+
+    
+    updates: document.getElementById('newComment').value,
+    dob: document.getElementById('dob').value, 
+    age: document.getElementById('age').value,
+    sex: document.getElementById('sex').value, 
+    enrollType: document.getElementById('enrollType').value,
+    sessions: document.getElementById('sessions').value, 
+    remaining: document.getElementById('remaining').value,
+    absences: document.getElementById('absences').value,
+    parent: document.getElementById('parentName').value,
+    address: document.getElementById('address').value, 
+    econtact: document.getElementById('econtact').value,
+    
+    payment: currentPayment,
+
+    // === START OF NEW FIELDS TO PASTE ===
+    profilePic: document.getElementById('profilePicUrl').value,
+    cycleName: document.getElementById('cycleName').value,
+    cycleStart: document.getElementById('cycleStart').value,
+    cycleEnd: document.getElementById('cycleEnd').value,
+    freeSessions: document.getElementById('freeSessions').value,
+    uniformAvailed: document.getElementById('uniformAvailed').value,
+    uniformPayment: document.getElementById('uniformPayment').value,
+    uniformAmount: document.getElementById('uniformAmount').value,
+    checklist: {
+      id1x1: document.getElementById('checkId').checked,
+      birthCert: document.getElementById('checkBirth').checked,
+      vaccine: document.getElementById('checkVaccine').checked,
+      others: document.getElementById('checkOthers').checked
+    }
+    // === END OF NEW FIELDS ===
+  };
+
+  google.script.run.withSuccessHandler(() => { 
+    document.getElementById('saveBtn').disabled = false; 
+    document.getElementById('saveBtn').innerText = "COMMIT CHANGES";
+    bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide(); 
+    refreshAll(); 
+
+
+// Add this inside your success handler after the alert
+alert("Data saved successfully!");
+
+// FORCE REMOVE BACKDROPS
+document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+document.body.classList.remove('modal-open');
+document.body.style.paddingRight = '0px';
+
+
+  })[existingId ? "updateTask" : "createTask"](d);
+}
+
+function confirmArchive() { 
+  if(confirm("Discarding this record will MOVE the student to the ARCHIVE sheet and remove them from the active list. Proceed?")) { 
+    google.script.run.withSuccessHandler(() => { 
+      bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide(); 
+      refreshAll(); 
+    }).archiveAndDeleteStudent(document.getElementById('taskId').value); 
+  } 
+}
+
+
+    let html5QrCode;
+
+function startQRScanner() {
+  const qrModal = new bootstrap.Modal(document.getElementById('qrModal'));
+  qrModal.show();
+
+  html5QrCode = new Html5Qrcode("qr-reader");
+  const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+  html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+    // 1. Success! ID found (e.g., "1001")
+    console.log("Scanned ID:", decodedText);
+    // A cleaner, professional success chime
+new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play();
+    
+    stopQRScanner();
+    bootstrap.Modal.getInstance(document.getElementById('qrModal')).hide();
+
+    // 2. Trigger your existing logic
+    // We pass "QR Scan Student" as name; the Code.gs fix below will look up the real name
+    processQRLog(decodedText);
+  }).catch(err => console.error("Scanner error:", err));
+}
+
+function stopQRScanner() {
+  if (html5QrCode) {
+    html5QrCode.stop().catch(err => console.error(err));
+  }
+}
+
+function processQRLog(scannedId) {
+  // We call your existing logAttendance function
+  // Status is 'Present' by default for scans
+  google.script.run
+    .withSuccessHandler(res => {
+      alert("Attendance Logged Successfully for ID: " + scannedId);
+      refreshAll();
+    })
+    .withFailureHandler(err => {
+      alert("Scan Error: " + err.message);
+    })
+    .logAttendance(scannedId, "QR Scan Student", "Present");
+}
+
+
+// DELETE FILE
+
+function deleteSpecificFile(taskId, fileIndex) {
+  if (!confirm("Are you sure you want to delete this attachment?")) return;
+
+  const task = allTasks.find(x => x[0] == taskId);
+  if (!task || !task[7]) return;
+
+  let urls = task[7].split(",").filter(u => u.trim() !== "");
+  urls.splice(fileIndex, 1);
+  const updatedUrls = urls.join(",");
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.innerText = "Deleting...";
+
+  google.script.run
+    .withSuccessHandler(() => {
+      // Update local data array so the UI reflects the change
+      task[7] = updatedUrls; 
+      
+      // REFRESH UI
+      editTask(taskId); 
+      
+      saveBtn.disabled = false;
+      saveBtn.innerText = "COMMIT CHANGES";
+      
+      // FIX FOR THE "BLACK SCREEN" (STUCK BACKDROP)
+      const backdrops = document.querySelectorAll('.modal-backdrop');
+      backdrops.forEach(b => b.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = 'auto';
+    })
+    .updateTaskAttachments(taskId, updatedUrls);
+}
+
+// CHOOSE CYCLE TO ARCHIVE
+
+function showBulkArchiveModal() {
+  const cycle = prompt("Enter the exact CYCLE NAME to archive (e.g., 'Cycle 10'):");
+  if (!cycle) return;
+
+  if (!confirm("This will move ALL students in '" + cycle + "' to a new Google Sheet tab and remove them from this list. Proceed?")) return;
+
+  // Show processing overlay
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  btn.innerHTML = "Archiving Batch...";
+
+  google.script.run
+    .withSuccessHandler(res => {
+      alert("Success! " + res.count + " students moved to tab: " + res.tabName);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-collection"></i> Bulk Archive Batch';
+      refreshAll(); // Refresh table
+    })
+    .withFailureHandler(err => {
+      alert("Error: " + err);
+      btn.disabled = false;
+    })
+    .bulkArchiveCycle(cycle);
+}
+
+
+function showUnarchivePrompt() {
+  const id = prompt("Enter the Student ID you wish to restore/re-enroll:");
+  if (!id) return;
+
+  const btn = event.currentTarget;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Locating...';
+
+  google.script.run
+    .withSuccessHandler(res => {
+      alert("Welcome back! " + res.name + " has been restored to the active list as a Re-Enrollee.");
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-person-up"></i> UNARCHIVE STUDENT';
+      refreshAll(); 
+    })
+    .withFailureHandler(err => {
+      alert("Error: " + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-person-up"></i> UNARCHIVE STUDENT';
+    })
+    .unarchiveStudent(id);
+}
+
+
+// UPLOAD PIC
+
+function uploadProfilePic(input) {
+  if (input.files && input.files[0]) {
+    const placeholder = document.getElementById('profilePicPlaceholder');
+    const preview = document.getElementById('profilePicPreview');
+    
+    // Show loading spinner
+    placeholder.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Uploading...';
+    preview.style.display = 'none';
+
+    const file = input.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      google.script.run
+        .withSuccessHandler(url => {
+          console.log("Image URL received: " + url);
+          
+          // 1. Save URL to hidden input
+          document.getElementById('profilePicUrl').value = url;
+          
+          // 2. Set Preview Image
+          preview.src = url;
+          preview.style.display = 'block';
+          placeholder.style.display = 'none';
+        })
+        .withFailureHandler(err => {
+          alert("Upload Error: " + err);
+          placeholder.innerHTML = 'Error';
+        })
+        .uploadFileToDrive(e.target.result, "PROFILE_" + file.name);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+
+
+
+// Function to check if user is already logged in on page load
+function checkSession() {
+  const loggedIn = localStorage.getItem('isLoggedIn');
+  if (loggedIn === 'true') {
+    showMainApp();
+  }
+}
+
+
+// RUN THIS ON PAGE LOAD
+window.onload = checkSession;
+
+
+
+// Function to handle search/filtering
+function filterTasks() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  
+  if (!query) {
+    filteredTasks = [...allTasks];
+  } else {
+    filteredTasks = allTasks.filter(task => {
+      // task[0] = ID, task[6] = Name, task[1] = Program/Category, task[17] = Payment Status
+      // Add or remove fields below to broaden/narrow search
+      const id = String(task[0]).toLowerCase();
+      const name = String(task[6]).toLowerCase();
+      const program = String(task[1]).toLowerCase();
+      const status = String(task[17]).toLowerCase();
+      
+      // Check if query exists in any of these fields
+      return id.includes(query) || 
+             name.includes(query) || 
+             program.includes(query) || 
+             status.includes(query);
+    });
+  }
+  
+  renderView(); // Refresh the display with the filtered list
+}
+
+// Attach the listener to the search bar
+document.getElementById('searchInput').addEventListener('input', filterTasks);
+
+
+
+function downloadFinancialReport() {
+  const btn = event.currentTarget;
+  const originalText = btn.innerHTML;
+  
+  // Provide feedback that the system is working
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...';
+  btn.disabled = true;
+
+  google.script.run
+    .withSuccessHandler(csvData => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+
+      // Create a hidden link and trigger the download
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const timestamp = new Date().toISOString().slice(0,10);
+      
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Financial_Summary_${timestamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    })
+    .withFailureHandler(err => {
+      alert("Error: " + err);
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    })
+    .getFinancialCSVData(); // This calls the new function in your code.gs
+}
+
+function showFinancialModal() {
+  // 1. Move modal to body to prevent layering issues
+  const modalElem = document.getElementById('financeReportModal');
+  document.body.appendChild(modalElem);
+
+  // 2. Show the loading spinner (Updated colspan to 5)
+  const tableBody = document.getElementById('financeReportTableBody');
+  tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border text-primary"></div><br><small class="text-muted">Calculating Totals...</small></td></tr>';
+  
+  // 3. Open the Modal
+  const modal = new bootstrap.Modal(modalElem);
+  modal.show();
+
+  // 4. THE UPDATED SUCCESS HANDLER
+  google.script.run.withSuccessHandler(function(report) {
+    // A. Update the Summary Cards
+    document.getElementById('modalTotalCollected').innerText = '₱' + Number(report.totalCollected).toLocaleString(undefined, {minimumFractionDigits: 2});
+    document.getElementById('modalTotalReceivables').innerText = '₱' + Number(report.totalBalance).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+    // B. Build the Table Rows
+    let rowsHtml = '';
+    if (!report.details || report.details.length === 0) {
+      rowsHtml = '<tr><td colspan="5" class="text-center text-muted py-3">No financial records found.</td></tr>';
+    } else {
+      report.details.forEach(row => {
+        const balanceValue = parseFloat(row.balance);
+        const isFullyPaid = balanceValue <= 0;
+        
+        // CSS Classes based on payment status
+        const balanceClass = isFullyPaid ? 'text-success fw-bold' : 'text-danger fw-bold';
+        const checkIcon = isFullyPaid ? '<i class="bi bi-check-circle-fill ms-1"></i>' : '';
+
+        // Integration of row.totalFee fetched from the Total Fee value
+        rowsHtml += `
+          <tr>
+            <td class="fw-bold text-uppercase">${row.name}</td>
+            <td class="fw-bold">₱${Number(row.totalFee).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="text-success">₱${Number(row.sessionPaid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="fw-bold">₱${Number(row.uniformPaid).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+            <td class="${balanceClass}">₱${Number(row.balance).toLocaleString(undefined, {minimumFractionDigits: 2})}${checkIcon}</td>
+          </tr>`;
+      });
+    }
+    
+    // C. Inject the rows into the table
+    tableBody.innerHTML = rowsHtml;
+
+  }).generateFinancialSummary(); 
+}
+
+function generateFinancialSummary() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("TASKS");
+  const data = sheet.getDataRange().getValues();
+  
+  let report = {
+    totalCollected: 0,
+    totalBalance: 0,
+    details: []
+  };
+
+  for (let i = 1; i < data.length; i++) {
+    const name = data[i][6]; // Column G [cite: 526]
+    const metaCell = data[i][4]; // Column E [cite: 528]
+    
+    try {
+      if (metaCell) {
+        const meta = JSON.parse(metaCell);
+        const sessPaid = parseFloat(meta.payment?.paid || 0);
+        const uniPaid = parseFloat(meta.uniformAmount || 0);
+        const balance = parseFloat(meta.payment?.due || 0);
+        const status = meta.payment?.status || "Unpaid";
+
+        report.totalCollected += (sessPaid + uniPaid);
+        report.totalBalance += balance;
+
+        report.details.push({
+          name: name,
+          sessionPaid: sessPaid.toFixed(2),
+          uniformPaid: uniPaid.toFixed(2),
+          status: status,
+          balance: balance.toFixed(2)
+        });
+      }
+    } catch (e) {
+      console.log("Error parsing finance for row " + i);
+    }
+  }
+  return report;
+}
+
+    
+/**
+ * Exports only the currently visible students (filtered list) to CSV
+ */
+function exportToCSV() {
+  // Use filteredTasks if a search/filter is active, otherwise use allTasks
+  const dataToExport = (typeof filteredTasks !== 'undefined' && filteredTasks.length > 0) 
+    ? filteredTasks 
+    : allTasks;
+
+  if (!dataToExport || dataToExport.length === 0) {
+    alert("No data available to export.");
+    return;
+  }
+
+  // 1. Define Headers (matching your list columns)
+  let csvContent = "Student ID,Program,Schedule,Student Name,Remaining Sessions,Absences,Payment Status,Balance Due\n";
+
+  // 2. Build Rows from the visible list
+  dataToExport.forEach(task => {
+    const id = `"${task[0]}"`;
+    const program = `"${task[1]}"`;
+    const schedule = `"${task[2]}"`;
+    const name = `"${task[6]}"`;
+    
+    // Extract metadata values (Sessions/Absences)
+    let remaining = 0;
+    let absences = 0;
+    try {
+      const meta = JSON.parse(task[4] || "{}");
+      remaining = meta.remaining || 0;
+      absences = meta.absences || 0;
+    } catch(e) {}
+
+    const payStatus = `"${task[17]}"`;
+    const balance = `"${task[18]}"`;
+
+    csvContent += `${id},${program},${schedule},${name},${remaining},${absences},${payStatus},${balance}\n`;
+  });
+
+  // 3. Trigger Download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStr = new Date().toISOString().slice(0,10);
+  
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Filtered_Student_List_${dateStr}.csv`);
+  link.style.visibility = 'hidden';
+  
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+
+let myChart;
+
+function updateFinanceInsights() {
+  google.script.run.withSuccessHandler(function(data) {
+    // 1. Update the Summary Cards
+    document.getElementById('statTotalStudents').innerText = data.totalStudents;
+    
+    // Show the full YTD Collection instead of current month only
+    document.getElementById('statTotalCollection').innerText = 
+      '₱' + data.ytdCollection.toLocaleString(undefined, {minimumFractionDigits: 2});
+
+    // 2. Refresh the Chart
+    const ctx = document.getElementById('financeTrendChart').getContext('2d');
+    if (myChart) myChart.destroy();
+    
+    myChart = new Chart(ctx, {
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Monthly New Students',
+            data: data.studentGrowth,
+            backgroundColor: 'rgba(106, 17, 203, 0.7)',
+            yAxisID: 'y'
+          }, 
+          {
+            type: 'line',
+            label: 'Monthly Revenue (₱)',
+            data: data.revenueTrend,
+            borderColor: '#2575fc',
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: { 
+            beginAtZero: true,
+            position: 'left', 
+            title: { display: true, text: 'Students', font: { weight: 'bold' } },
+            ticks: { stepSize: 1 }
+          },
+          y1: { 
+            beginAtZero: true,
+            position: 'right', 
+            grid: { drawOnChartArea: false },
+            title: { display: true, text: 'Collection (₱)', font: { weight: 'bold' } }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { usePointStyle: true, font: { family: "'JetBrains Mono', monospace", size: 11 } }
+          }
+        }
+      }
+    });
+  }).getFinanceMetrics();
+}
+
+
+  </script>
+  </div>
+
+ <div class="modal fade" id="financeReportModal" tabindex="-1" data-bs-backdrop="static" style="z-index: 10001 !important;">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 15px; overflow: hidden;">
+      
+      <div class="modal-header border-0 p-3" style="background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);">
+        <h5 class="modal-title fw-bold text-white m-0">
+          <i class="bi bi-cash-stack me-2"></i>FINANCIAL SUMMARY REPORT
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        
+        <div class="row g-2 mb-3 align-items-end p-2 bg-light rounded border">
+          <div class="col-md-5">
+            <label class="small fw-bold text-muted">Filter From</label>
+            <input type="date" id="financeStart" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-5">
+            <label class="small fw-bold text-muted">To</label>
+            <input type="date" id="financeEnd" class="form-control form-control-sm">
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-primary btn-sm w-100 fw-bold" onclick="updateFinanceInsights()">APPLY</button>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-3">
+            <div class="p-2 border rounded shadow-sm bg-white text-center">
+              <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;">TOTAL REGISTERED</small>
+              <h4 class="fw-800 mb-0 text-primary" id="statTotalStudents">0</h4>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-2 border rounded shadow-sm bg-white text-center">
+              <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;">COLLECTED</small>
+              <h4 class="fw-800 mb-0 text-success" id="modalTotalCollected">₱0.00</h4>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-2 border rounded shadow-sm bg-white text-center">
+              <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;">RECEIVABLES</small>
+              <h4 class="fw-800 mb-0 text-danger" id="modalTotalReceivables">₱0.00</h4>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="p-2 border rounded shadow-sm bg-white text-center">
+              <small class="text-muted d-block fw-bold" style="font-size: 0.7rem;">YTD COLLECTION</small>
+              <h4 class="fw-800 mb-0 text-info" id="statTotalCollection">₱0.00</h4>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4 p-3 border rounded shadow-sm bg-white">
+          <h6 class="fw-bold mb-3 small text-uppercase text-muted" style="letter-spacing: 1px;">Monthly Population & Revenue Growth</h6>
+          <div style="height: 220px; width: 100%;">
+            <canvas id="financeTrendChart"></canvas>
+          </div>
+        </div>
+
+        <h6 class="fw-bold small text-uppercase text-muted mb-2">Detailed Transaction History</h6>
+        <div class="table-responsive border rounded" style="max-height: 250px;">
+          <table class="table table-hover align-middle small mb-0">
+            <thead class="table-dark sticky-top">
+              <tr>
+                <th>Student</th>
+                <th>Total Tuition</th>
+                <th>Paid (Sessions)</th>
+                <th>Paid (Uniform)</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="financeReportTableBody">
+              </tbody>
+          </table>
+        </div>
+
+        <div class="mt-3 p-2 bg-light rounded border">
+          <small class="text-muted" style="font-size: 0.75rem;">
+            <i class="bi bi-info-circle-fill text-primary"></i> 
+            <strong>Note:</strong> The <b>Balance</b> shown reflects only outstanding <b>Tuition</b> obligations and does not include unpaid Uniform fees.
+          </small>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light border-0">
+        <button class="btn btn-outline-dark btn-sm fw-bold" onclick="downloadFinancialReport()">
+          <i class="bi bi-download"></i> EXPORT CSV
+        </button>
+        <button class="btn btn-secondary btn-sm fw-bold" data-bs-dismiss="modal">CLOSE</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
