@@ -768,6 +768,23 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+
+async function fetchAction(action, payload = {}) {
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec"; // <--- Put your /exec URL here
+  
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: action, ...payload })
+    });
+    return await response.json();
+  } catch (err) {
+    console.error("API Error:", err);
+    throw err;
+  }
+}
+
+
     let allTasks = [], filteredTasks = [], currentView = 'list', lookupData = {}, currentPayment = {};
 
  // 1. THE GATEKEEPER: Checks session on page load
@@ -932,26 +949,14 @@ async function verifyLogin() {
     
 
 async function refreshAll() {
-  // 🚨 IMPORTANT: Replace the URL below with your actual /exec URL
-  const scriptUrl = "https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec"; 
-
   try {
-    const response = await fetch(scriptUrl, {
-      method: "POST",
-      body: JSON.stringify({ action: "getTasks" })
-    });
-
-    const data = await response.json();
-
-    // Standard logic to update your UI [cite: 104, 114]
+    const data = await fetchAction('getTasks');
     allTasks = data;
     filteredTasks = data;
-    updateGlobalMetrics(); 
+    updateGlobalMetrics();
     renderMain();
-
   } catch (err) {
-    console.error("Fetch error:", err);
-    alert("System could not load data. Check your connection or Script URL.");
+    alert("Failed to load data from Google Sheets");
   }
 }
 
