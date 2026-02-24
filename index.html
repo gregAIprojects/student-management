@@ -908,31 +908,43 @@ async function verifyLogin() {
   try {
     const response = await fetch("https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec", {
       method: "POST",
+      mode: "cors", // Explicitly request CORS
+      redirect: "follow", // ABSOLUTELY REQUIRED for Google Apps Script
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8" // This bypasses strict CORS preflight
+      },
       body: JSON.stringify({
         action: "login",
         password: password
       })
     });
     
-    const data = await response.json();
+    // Check if the response is actually JSON
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Server returned non-JSON:", text);
+      throw new Error("Server returned an invalid response (HTML). Check Deployment permissions.");
+    }
 
     if (data.success) {
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-      refreshAll(); // Loads your dashboard metrics [cite: 292]
+      refreshAll(); 
     } else {
       errorMsg.style.display = 'block';
       passInput.value = '';
     }
   } catch (error) {
     console.error("Login Error:", error);
-    alert("Connection failed. Check your Apps Script Deployment.");
+    alert(error.message || "Connection failed.");
   } finally {
     loginBtn.disabled = false;
     loginBtn.innerHTML = '<i class="bi bi-shield-lock-fill me-2"></i>ACCESS SYSTEM';
   }
 }
-
 
 
     function calculateAge() {
