@@ -989,30 +989,44 @@ async function refreshAll() {
 }
 
 
-function updateGlobalMetrics() {
-    google.script.run.withSuccessHandler(m => {
-      // 1. Update the Metric Cards
-      document.getElementById('total-count').innerText = m.totalStudents;
-      document.getElementById('attendance-rate').innerText = m.attendanceRate;
-      document.getElementById('present-count').innerText = m.todayPresent;
-      document.getElementById('absent-count').innerText = m.todayAbsent;
-      
-      // 2. Re-populate the Program Table
-      const tableBody = document.getElementById('categoryTableBody');
-      if (tableBody && m.categoryCounts) {
-        tableBody.innerHTML = ""; 
-        const rows = Object.entries(m.categoryCounts)
-          .sort(([,a], [,b]) => b - a)
-          .map(([program, count]) => `
-            <tr>
-              <td class="text-muted py-1">${program}</td>
-              <td class="text-end fw-bold text-primary py-1">${count}</td>
-            </tr>
-          `).join('');
-        tableBody.innerHTML = rows;
-      }
-    }).getTaskMetrics();
+async function updateGlobalMetrics() {
+  // 🚨 Use your actual deployed /exec URL here
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXjI87xt7z8zpE3rAOIbkeXTXfdLeJuFfq9D-F2hd1NV5Uxl_LnMntNeoBOhPNsHoQyg/exec";
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      redirect: "follow",
+      body: JSON.stringify({ action: "getTaskMetrics" })
+    });
+
+    const m = await response.json();
+
+    // 1. Update the Metric Cards
+    document.getElementById('total-count').innerText = m.totalStudents;
+    document.getElementById('attendance-rate').innerText = m.attendanceRate;
+    document.getElementById('present-count').innerText = m.todayPresent;
+    document.getElementById('absent-count').innerText = m.todayAbsent;
+    
+    // 2. Re-populate the Program Table
+    const tableBody = document.getElementById('categoryTableBody');
+    if (tableBody && m.categoryCounts) {
+      tableBody.innerHTML = ""; 
+      const rows = Object.entries(m.categoryCounts)
+        .sort(([,a], [,b]) => b - a)
+        .map(([program, count]) => `
+          <tr>
+            <td class="text-muted py-1">${program}</td>
+            <td class="text-end fw-bold text-primary py-1">${count}</td>
+          </tr>
+        `).join('');
+      tableBody.innerHTML = rows;
+    }
+  } catch (err) {
+    console.error("Failed to load metrics:", err);
   }
+}
 
     function renderMain() {
       const container = document.getElementById('viewContainer');
